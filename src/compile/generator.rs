@@ -24,7 +24,7 @@ pub struct Generator {
     pub(crate) context: Context,
     pub(crate) module: Module,
     pub(crate) builder: Builder,
-    pub(crate) stack_pointer: RefCell<Vec<PointerValue>>,
+    pub(crate) stack_pointer: RefCell<Vec<BasicValueEnum>>,
     pub(crate) func_dic: RefCell<HashMap<String, FunctionValue>>,
     pub(crate) env_dic: RefCell<HashMap<String, BasicValueEnum>>,
 }

@@ -74,8 +74,17 @@ impl Generator {
     pub(crate) fn llvm_stacksave(&self) {
         let func: FunctionValue = *self.func_dic.borrow().get("stacksave").expect("");
         let adr = self.builder.build_call(func, &[], "");
-        // self.stack_pointer.borrow().push(adr);
+        adr.try_as_basic_value().left().map(|a|
+            self.stack_pointer.borrow_mut().push(a)).expect("");
+
     }
+
+    pub(crate) fn llvm_stackrestore(&self) {
+        let adr = self.stack_pointer.borrow_mut().pop().expect("");
+        let func: FunctionValue = *self.func_dic.borrow().get("stackrestore").expect("");
+        self.builder.build_call(func, &[adr], "");
+    }
+
 
     pub(crate) fn fold_op(
         &self,
