@@ -71,17 +71,34 @@ impl Generator {
         self.symbol_regit("F".to_string(), false_val.into());
     }
 
-    pub(crate) fn llvm_stacksave(&self) {
-        let func: FunctionValue = *self.func_dic.borrow().get("stacksave").expect("");
+    pub(crate) fn let_local(&self, arg: &[SExp]) -> Result<BasicValueEnum, &'static str> {
+    info!("let");
+    if let Some((SExp::List(s), tail)) = arg.split_first() {
+        println!("head: {:?}", s);
+        println!("tail: {:?}", tail);
+        self.llvm_stacksave();
+        self.def_var(s, ScopeType::Closure);
+        let val = self.expr(&tail[0]);
+        self.llvm_stackrestore();
+        self.stack_pointer.borrow_mut().pop();
+        println!("{:?}", self.stack_pointer.borrow());
+        val
+    } else {
+        Err("inv call")
+    }
+    }
+
+    pub fn llvm_stacksave(&self) {
+        let func: FunctionValue = *self.func_dic.borrow().get(&"stacksave".to_ascii_uppercase()).expect("nai");
         let adr = self.builder.build_call(func, &[], "");
         adr.try_as_basic_value().left().map(|a|
             self.stack_pointer.borrow_mut().push(a)).expect("");
 
     }
 
-    pub(crate) fn llvm_stackrestore(&self) {
+    pub fn llvm_stackrestore(&self) {
         let adr = self.stack_pointer.borrow_mut().pop().expect("");
-        let func: FunctionValue = *self.func_dic.borrow().get("stackrestore").expect("");
+        let func: FunctionValue = *self.func_dic.borrow().get(&"stackrestore".to_ascii_uppercase()).expect("");
         self.builder.build_call(func, &[adr], "");
     }
 
@@ -121,28 +138,17 @@ impl Generator {
                     .fold(l, append)
             })
             .map(|v| v.as_basic_value_enum())
-        // self.expr(&arg[1])
-        //     .map(allow_type)?
-        //     .map(|l| {
-        //         arg.iter()
-        //             .skip(2) // pair iter
-        //             .flat_map(|r| self.expr(r))
-        //             .flat_map(allow_type)
-        //             .fold(l, append)
-        //     })
-        //     .map(|v| v.as_basic_value_enum())
     }
 
     pub(crate) fn def_var(
         &self,
-        // value: impl Iterator<Item = SExp>,
-        // value: Vec<SExp>,
         value: &[SExp],
+        scope: ScopeType,
     ) -> Result<BasicValueEnum, &'static str> {
         let mut itr = value.into_iter();
         let symbol = itr.next().ok_or("").map(|s| s.is_call().ok_or(""))?;
         let rhs = itr.next().map(|v| self.expr(v)).ok_or("damene")?;
-        let val = self.alloca_and_store(&rhs?, symbol?);
+        self.alloca_and_store(&rhs?, symbol?, scope);
         itr.next().map_or(Ok(rhs?.into()), |_| Err(""))
     }
 }

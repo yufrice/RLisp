@@ -1,6 +1,6 @@
 use combine::error::ParseError;
 use combine::parser::char::spaces;
-use combine::{attempt, choice, many1, satisfy, sep_by1, skip_many, token};
+use combine::{attempt, choice, optional,many1, satisfy, sep_by1, skip_many, token};
 use combine::{Parser, Stream};
 use std::boxed::Box;
 
@@ -30,8 +30,8 @@ where
     I: Stream<Item = char>,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
-    value::lexer('(').with(choice((
-        value::lexer(')').map(|_| SExp::new_nil()),
+    token('(').with(choice((
+        token(')').map(|_| SExp::new_nil()),
         attempt(dotted()),
         list(),
     )))
@@ -52,7 +52,7 @@ parser! {
             [I: Stream<Item = char>,
             I::Error: ParseError<I::Item, I::Range, I::Position>,]
             {
-                (exp(), value::lexer('.'), exp(), value::lexer(')'))
+                (exp(), token('.'), exp(), value::lexer(')'))
                     .map(|v| SExp::Dotted(Box::new(v.0), Box::new(v.2)))
             }
 }

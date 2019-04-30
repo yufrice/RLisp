@@ -13,7 +13,7 @@ where
     I: Stream<Item = char>,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
-    choice((number(), sign(), symbol(None)))
+    optional(spaces()).with(choice((number(), sign(), symbol(None)))).skip(spaces())
 }
 
 fn number<I>() -> impl Parser<Input = I, Output = DataType>
@@ -84,5 +84,5 @@ where
     I: Stream<Item = char>,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
 {
-    token(c).skip(spaces())
+    optional(spaces()).with(token(c))
 }

@@ -11,11 +11,15 @@ impl Generator {
         }
     }
 
-    pub(crate) fn alloca_and_store(&self, val: &BasicValueEnum, symbol: String) -> PointerValue {
+    pub(crate) fn alloca_and_store(&self, val: &BasicValueEnum, symbol: String, scope: ScopeType) -> PointerValue {
         let typ = val.get_type();
         let ptr = self.builder.build_alloca(typ, &symbol[..]);
         self.builder.build_store(ptr, *val);
-        self.symbol_regit(symbol, *val);
+        match scope {
+            Closue => (),
+            Local => self.symbol_regit(symbol, *val),
+            _ => unimplemented!(),
+        };
         ptr
     }
 

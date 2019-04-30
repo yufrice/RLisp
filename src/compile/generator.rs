@@ -20,6 +20,13 @@ pub(crate) enum OP {
     Div,
 }
 
+#[derive(Debug, PartialEq)]
+pub(crate) enum ScopeType {
+    Closure,
+    Local,
+    Global,
+}
+
 pub struct Generator {
     pub(crate) context: Context,
     pub(crate) module: Module,
