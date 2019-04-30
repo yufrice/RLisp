@@ -21,8 +21,8 @@ impl Generator {
         let ptr = self.builder.build_alloca(typ, &symbol[..]);
         self.builder.build_store(ptr, *val);
         match scope {
-            Closue => (),
-            Local => self.symbol_regit(symbol, *val),
+            ScopeType::Closure => (),
+            ScopeType::Local => self.symbol_regit(symbol, *val),
             _ => unimplemented!(),
         };
         ptr
@@ -34,9 +34,13 @@ impl Generator {
     }
 
     pub(crate) fn symbol(&self, sym: String) -> Result<BasicValueEnum, &'static str> {
-        match self.env_dic.borrow().get(&sym.to_uppercase()) {
-            Some(val) => Ok(*val),
-            None => Err("nai"),
+        match self.module.get_global(&sym) {
+            Some(val) => Ok(val.as_basic_value_enum()),
+            None =>
+            match self.env_dic.borrow().get(&sym.to_uppercase()) {
+                Some(val) => Ok(*val),
+                None => Err("nai"),
+            }
         }
     }
     pub(crate) fn str_value(&self, sym: String) -> FloatValue {
