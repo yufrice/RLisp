@@ -94,14 +94,4 @@ impl Generator {
             _ => Err("shiran"),
         }
     }
-
-    // pub fn get_bitcode(&self) -> () {
-    //     use std::path::Path;
-    //     let path = Path::new("./bc");
-    //     self.module.write_bitcode_to_path(path);
-    // }
-
-    // pub fn test(&self) -> () {
-    //     println!("{}", self.module.print_to_string());
-    // }
 }

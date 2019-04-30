@@ -44,8 +44,6 @@ impl Generator {
         let i8_type = self.context.i8_type();
         let vec_type = i8_type.vec_type(len);
         (
-            // vec_type.as_basic_type_enum(),
-            // self.context.const_string(sym, false).as_basic_value_enum(),
             unreachable!()
         )
     }

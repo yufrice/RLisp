@@ -113,9 +113,7 @@ impl Generator {
     pub(crate) fn fold_op(
         &self,
         op: OP,
-        // ref mut arg: impl Iterator<Item = SExp>,
         arg: &[SExp],
-        // arg: Vec<SExp>,
     ) -> Result<BasicValueEnum, &'static str> {
         let append = |e: FloatValue, v: FloatValue| -> FloatValue {
             match op {
@@ -133,7 +131,6 @@ impl Generator {
             }
         };
 
-        // let mut iter = arg.flat_map(|r| self.expr(r)).by_ref();
         (arg.iter().by_ref().nth(0).ok_or(""))
             .map(|r| self.expr(r))?
             .map(allow_type)?

@@ -16,7 +16,6 @@ impl Generator {
         &self,
         symbol: String,
         arg: &[SExp],
-        // ref mut arg: impl Iterator<Item = SExp>,
     ) -> Result<BasicValueEnum, &'static str> {
         match &symbol[..] {
             "+" => self.fold_op(OP::Add, arg),

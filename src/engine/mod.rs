@@ -32,7 +32,6 @@ impl Engine {
                 generator: generator,
             }),
             Err(err) => {
-                // err to str naino..
                 println!("{}", err);
                 None
             }
@@ -44,7 +43,6 @@ impl Engine {
             None => Ok(println!("")),
             Some(ast) => {
                 let res = self.generator.expr(&ast)?;
-                // let mut ptr = self.generator.alloca_and_store(res);
                 let ref val = self.printer(&res);
                 println!("{}", &val);
                 Ok(())
