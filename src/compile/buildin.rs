@@ -72,36 +72,44 @@ impl Generator {
     }
 
     pub(crate) fn let_local(&self, arg: &[SExp]) -> Result<BasicValueEnum, &'static str> {
-    info!("let");
-    if let Some((SExp::List(s), tail)) = arg.split_first() {
-        println!("head: {:?}", s);
-        println!("tail: {:?}", tail);
-        self.llvm_stacksave();
-        self.def_var(s, ScopeType::Closure);
-        let val = self.expr(&tail[0]);
-        self.llvm_stackrestore();
-        self.stack_pointer.borrow_mut().pop();
-        println!("{:?}", self.stack_pointer.borrow());
-        val
-    } else {
-        Err("inv call")
-    }
+        info!("let");
+        if let Some((SExp::List(s), tail)) = arg.split_first() {
+            println!("head: {:?}", s);
+            println!("tail: {:?}", tail);
+            self.llvm_stacksave();
+            self.def_var(s, ScopeType::Closure);
+            let val = self.expr(&tail[0]);
+            self.llvm_stackrestore();
+            self.stack_pointer.borrow_mut().pop();
+            println!("{:?}", self.stack_pointer.borrow());
+            val
+        } else {
+            Err("inv call")
+        }
     }
 
     pub fn llvm_stacksave(&self) {
-        let func: FunctionValue = *self.func_dic.borrow().get(&"stacksave".to_ascii_uppercase()).expect("nai");
+        let func: FunctionValue = *self
+            .func_dic
+            .borrow()
+            .get(&"stacksave".to_ascii_uppercase())
+            .expect("nai");
         let adr = self.builder.build_call(func, &[], "");
-        adr.try_as_basic_value().left().map(|a|
-            self.stack_pointer.borrow_mut().push(a)).expect("");
-
+        adr.try_as_basic_value()
+            .left()
+            .map(|a| self.stack_pointer.borrow_mut().push(a))
+            .expect("");
     }
 
     pub fn llvm_stackrestore(&self) {
         let adr = self.stack_pointer.borrow_mut().pop().expect("");
-        let func: FunctionValue = *self.func_dic.borrow().get(&"stackrestore".to_ascii_uppercase()).expect("");
+        let func: FunctionValue = *self
+            .func_dic
+            .borrow()
+            .get(&"stackrestore".to_ascii_uppercase())
+            .expect("");
         self.builder.build_call(func, &[adr], "");
     }
-
 
     pub(crate) fn fold_op(
         &self,
