@@ -6,6 +6,7 @@ extern crate rlisp;
 use rlisp::parser::grammer;
 
 fn main() {
+    env_logger::init();
     let mut filepath = std::env::args();
     match filepath.nth(1) {
         None => repl(),

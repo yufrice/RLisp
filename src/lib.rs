@@ -6,6 +6,9 @@ extern crate combine;
 extern crate auto_enums;
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 
 pub mod compile;
 pub mod engine;
