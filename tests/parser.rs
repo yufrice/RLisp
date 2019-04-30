@@ -1,7 +1,6 @@
 extern crate rlisp;
 
 mod parse {
-    use rlisp::parser::*;
     use rlisp::syntax::ast::*;
     use std::boxed::Box;
 

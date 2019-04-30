@@ -1,6 +1,5 @@
 use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::module::Module;
-use inkwell::support::LLVMString;
 use inkwell::values::*;
 use inkwell::AddressSpace;
 
@@ -31,26 +30,26 @@ impl Generator {
         self.module
             .get_function("llvm.stacksave")
             .map(|f| self.func_regit("stacksave".to_string(), f))
-            .ok_or("buildin:24".to_string());
+            .ok_or_else(|| "buildin:24".to_string())?;
         self.module
             .get_function("llvm.stackrestore")
             .map(|f| self.func_regit("stackrestore".to_string(), f))
-            .ok_or("buildin:24".to_string())
+            .ok_or_else(|| "buildin:24".to_string())
     }
 
-    pub(crate) fn symbol_regit(&self, symbol: String, value: BasicValueEnum) -> () {
+    pub(crate) fn symbol_regit(&self, symbol: String, value: BasicValueEnum) {
         self.env_dic
             .borrow_mut()
             .insert(symbol.to_uppercase(), value);
     }
 
-    pub(crate) fn func_regit(&self, symbol: String, value: FunctionValue) -> () {
+    pub(crate) fn func_regit(&self, symbol: String, value: FunctionValue)  {
         self.func_dic
             .borrow_mut()
             .insert(symbol.to_uppercase(), value);
     }
 
-    pub(crate) fn symbol_entry(&self) -> () {
+    pub(crate) fn symbol_entry(&self)  {
         // nil -> NIL
         let nil_val = self
             .context
@@ -77,7 +76,7 @@ impl Generator {
             println!("head: {:?}", s);
             println!("tail: {:?}", tail);
             self.llvm_stacksave();
-            self.def_var(s, ScopeType::Closure);
+            self.def_var(s, ScopeType::Closure)?;
             let val = self.expr(&tail[0]);
             self.llvm_stackrestore();
             self.stack_pointer.borrow_mut().pop();
@@ -153,10 +152,10 @@ impl Generator {
         value: &[SExp],
         scope: ScopeType,
     ) -> Result<BasicValueEnum, &'static str> {
-        let mut itr = value.into_iter();
+        let mut itr = value.iter();
         let symbol = itr.next().ok_or("").map(|s| s.is_call().ok_or(""))?;
         let rhs = itr.next().map(|v| self.expr(v)).ok_or("damene")?;
         self.alloca_and_store(&rhs?, symbol?, scope);
-        itr.next().map_or(Ok(rhs?.into()), |_| Err(""))
+        itr.next().map_or(Ok(rhs?), |_| Err(""))
     }
 }
