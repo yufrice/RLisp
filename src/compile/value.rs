@@ -1,4 +1,7 @@
-use inkwell::values::*;
+use inkwell::values::PointerValue;
+use inkwell::values::{BasicValue, BasicValueEnum, FloatValue, GlobalValue};
+use inkwell::types::BasicTypeEnum;
+use inkwell::AddressSpace;
 
 use crate::compile::generator::*;
 use crate::syntax::ast::{DataType, SExp};
@@ -16,16 +19,25 @@ impl Generator {
         val: &BasicValueEnum,
         symbol: String,
         scope: ScopeType,
-    ) -> PointerValue {
-        let typ = val.get_type();
-        let ptr = self.builder.build_alloca(typ, &symbol[..]);
-        self.builder.build_store(ptr, *val);
+    ) {
         match scope {
-            ScopeType::Closure => (),
-            ScopeType::Local => self.symbol_regit(symbol, *val),
-            _ => unimplemented!(),
+            ScopeType::Local => {
+                let typ = val.get_type();
+                let ptr = self.builder.build_alloca(typ, &symbol[..]);
+                self.symbol_regit(symbol, *val);
+                self.builder.build_store(ptr, *val);
+            },
+            ScopeType::Closure => unimplemented!(),
+            ScopeType::Global => {
+                self.add_global_variable(symbol, *val);
+            },
         };
-        ptr
+    }
+
+    pub(crate) fn add_global_variable(&self, symbol: String, val: BasicValueEnum) {
+        let ptr_type = val.get_type();
+        let ptr =  self.module.add_global(ptr_type, Some(AddressSpace::Global), &symbol.to_ascii_uppercase());
+        ptr.set_initializer(val.as_float_value())
     }
 
     pub(crate) fn floating(&self, value: f64) -> BasicValueEnum {
@@ -34,10 +46,11 @@ impl Generator {
     }
 
     pub(crate) fn symbol(&self, sym: String) -> Result<BasicValueEnum, &'static str> {
-        match self.module.get_global(&sym) {
-            Some(val) => Ok(val.as_basic_value_enum()),
+        let symbol = sym.to_ascii_uppercase();
+        match self.module.get_global(&symbol) {
+            Some(val) => Ok(self.builder.build_load(val.as_pointer_value(), "")),
             None =>
-            match self.env_dic.borrow().get(&sym.to_uppercase()) {
+            match self.env_dic.borrow().get(&symbol) {
                 Some(val) => Ok(*val),
                 None => Err("nai"),
             }
