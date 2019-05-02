@@ -23,7 +23,7 @@ impl Generator {
             "*" => self.fold_op(OP::Mul, arg),
             "/" => self.fold_op(OP::Div, arg),
             "let*" => self.let_local(arg),
-            "def!" => self.def_var(arg, ScopeType::Local),
+            "def!" => self.def_var(arg, ScopeType::Global),
             _ => Err("func"),
         }
     }
