@@ -36,13 +36,19 @@ pub struct Generator {
     pub(crate) env_dic: RefCell<HashMap<String, BasicValueEnum>>,
 }
 
+impl Default for Generator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Generator {
     pub fn new() -> Generator {
         let context = Context::create();
         Generator {
             module: context.create_module("RLISP"),
             builder: context.create_builder(),
-            context: context,
+            context,
             stack_pointer: RefCell::new(Vec::new()),
             func_dic: RefCell::new(HashMap::new()),
             env_dic: RefCell::new(HashMap::new()),
@@ -83,7 +89,6 @@ impl Generator {
     }
 
     pub(crate) fn expr(&self, ast: &SExp) -> Result<BasicValueEnum, &'static str> {
-        self.module.print_to_stderr();
         match ast {
             SExp::Atom(v) => self.atom(v),
             SExp::List(v) => match v.as_slice() {
