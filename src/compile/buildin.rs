@@ -1,6 +1,7 @@
 use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::module::Module;
 use inkwell::values::*;
+use inkwell::types::FloatType;
 use inkwell::AddressSpace;
 
 use crate::compile::generator::*;
@@ -73,14 +74,10 @@ impl Generator {
     pub(crate) fn let_local(&self, arg: &[SExp]) -> Result<BasicValueEnum, &'static str> {
         info!("let");
         if let Some((SExp::List(s), tail)) = arg.split_first() {
-            println!("head: {:?}", s);
-            println!("tail: {:?}", tail);
             self.llvm_stacksave();
             self.def_var(s, ScopeType::Closure)?;
             let val = self.expr(&tail[0]);
             self.llvm_stackrestore();
-            self.stack_pointer.borrow_mut().pop();
-            println!("{:?}", self.stack_pointer.borrow());
             val
         } else {
             Err("inv call")
@@ -92,22 +89,33 @@ impl Generator {
             .func_dic
             .borrow()
             .get(&"stacksave".to_ascii_uppercase())
-            .expect("nai");
-        let adr = self.builder.build_call(func, &[], "");
-        adr.try_as_basic_value()
+            .expect("stack save");
+        self.builder.build_call(func, &[], "")
+            .try_as_basic_value()
             .left()
             .map(|a| self.stack_pointer.borrow_mut().push(a))
-            .expect("");
+            .expect("Err funcRetValue to basic value");
     }
 
     pub fn llvm_stackrestore(&self) {
         let adr = self.stack_pointer.borrow_mut().pop().expect("");
+        self.env_dic.borrow_mut();
         let func: FunctionValue = *self
             .func_dic
             .borrow()
             .get(&"stackrestore".to_ascii_uppercase())
             .expect("");
         self.builder.build_call(func, &[adr], "");
+    }
+
+    pub fn call_print(&self, val: BasicValueEnum) {
+        let format_str = match val.get_type() {
+            FloatType => self.module.get_global("floatFormat"),
+            _ => unimplemented!(),
+        }.unwrap();
+
+        let print_func = self.module.get_function("print").unwrap();
+        self.builder.build_call(print_func, &[format_str.as_basic_value_enum(), val], "");
     }
 
     pub(crate) fn fold_op(
