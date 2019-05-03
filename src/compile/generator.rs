@@ -28,10 +28,11 @@ pub(crate) enum ScopeType {
 }
 
 pub struct Generator {
-    pub(crate) context: Context,
     pub(crate) module: Module,
-    pub(crate) jit_module: Option<Module>,
     pub(crate) builder: Builder,
+    // ToDo 以下全部 contextでまとめる
+    pub(crate) context: Context,
+    pub(crate) jit_module: Option<Module>,
     pub(crate) stack_pointer: RefCell<Vec<BasicValueEnum>>,
     pub(crate) func_dic: RefCell<HashMap<String, FunctionValue>>,
     pub(crate) env_dic: RefCell<HashMap<String, BasicValueEnum>>,
@@ -57,8 +58,8 @@ impl Generator {
         }
     }
 
-    pub fn jit_env(&mut self, module: Module) {
-        self.jit_module = Some(module);
+    pub fn jit_env(&mut self, module: Option<Module>) {
+        self.jit_module = module;
     }
 
     pub fn init(&mut self) {
@@ -100,10 +101,10 @@ impl Generator {
     pub fn jit_eval(&self, ast: &SExp) -> Result<FunctionValue, &'static str> {
         let func_type = FloatType::f64_type().fn_type(&[], false);
         let func = self.get_module().add_function("lambda", func_type, None);
-        let bb = self.context.append_basic_block(&func, "entry");
+        let entry = self.context.append_basic_block(&func, "entry");
 
         let expr = self.expr(ast)?;
-        self.builder.position_at_end(&bb);
+        self.builder.position_at_end(&entry);
         self.builder.build_return(Some(&expr));
         Ok(func)
     }

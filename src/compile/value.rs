@@ -1,5 +1,6 @@
 use inkwell::values::{BasicValueEnum, FloatValue};
 use inkwell::AddressSpace;
+use inkwell::module::Linkage;
 
 use crate::compile::generator::*;
 use crate::syntax::ast::DataType;
@@ -29,11 +30,12 @@ impl Generator {
 
     pub(crate) fn add_global_variable(&self, symbol: String, val: BasicValueEnum) {
         let ptr_type = val.get_type();
-        let ptr = self.get_module().add_global(
+        let ptr = self.module.add_global(
             ptr_type,
-            Some(AddressSpace::Global),
+            Some(AddressSpace::Shared),
             &symbol.to_ascii_uppercase(),
         );
+        ptr.set_linkage(Linkage::External);
         ptr.set_initializer(val.as_float_value())
     }
 
@@ -44,7 +46,7 @@ impl Generator {
 
     pub(crate) fn symbol(&self, sym: String) -> Result<BasicValueEnum, &'static str> {
         let symbol = sym.to_ascii_uppercase();
-        match self.get_module().get_global(&symbol) {
+        match self.module.get_global(&symbol) {
             Some(val) => Ok(self.builder.build_load(val.as_pointer_value(), "")),
             None => match self.env_dic.borrow().get(&symbol) {
                 Some(val) => Ok(*val),
@@ -52,6 +54,7 @@ impl Generator {
             },
         }
     }
+
     pub(crate) fn str_value(&self, sym: String) -> FloatValue {
         let len = sym.len() as u32;
         let i8_type = self.context.i8_type();

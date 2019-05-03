@@ -25,8 +25,9 @@ impl Engine {
                 let engine = module
                     .create_jit_execution_engine(OptimizationLevel::None)
                     .unwrap();
-                self.generator.jit_env(module);
+                self.generator.jit_env(Some(module));
                 self.generator.jit_eval(&ast)?;
+                engine.add_module(&self.generator.module).unwrap();
 
                 let ret = unsafe {
                     let func = engine
@@ -35,6 +36,9 @@ impl Engine {
                     func.call()
                 };
                 println!("{:?}", ret);
+
+                self.generator.jit_env(None);
+                engine.remove_module(&self.generator.module).unwrap();
                 Ok(())
             }
         }
