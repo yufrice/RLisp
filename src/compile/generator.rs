@@ -10,7 +10,7 @@ use inkwell::OptimizationLevel;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-use crate::syntax::ast::{DataType, SExp};
+use crate::syntax::ast::SExp;
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum OP {
@@ -69,7 +69,7 @@ impl Generator {
         // main func
         let fn_type = self.context.void_type().fn_type(&[], false);
         let func = self.create_function(&"main".to_string(), fn_type);
-        let entry = self.create_entry(&func, "entry");
+        let entry = self.create_entry(func, "entry");
         self.builder.position_at_end(&entry);
         let ret = self.builder.build_return(None);
         self.builder.position_before(&ret);
@@ -88,8 +88,8 @@ impl Generator {
         func
     }
 
-    fn create_entry(&self, fun: &FunctionValue, name: &str) -> BasicBlock {
-        self.context.append_basic_block(fun, name)
+    fn create_entry(&self, fun: FunctionValue, name: &str) -> BasicBlock {
+        self.context.append_basic_block(&fun, name)
     }
 
     pub fn create_engine(&self) -> Result<ExecutionEngine, LLVMString> {

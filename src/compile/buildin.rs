@@ -1,7 +1,7 @@
 use inkwell::memory_buffer::MemoryBuffer;
 use inkwell::module::Module;
+use inkwell::types::BasicTypeEnum;
 use inkwell::values::*;
-use inkwell::types::FloatType;
 use inkwell::AddressSpace;
 
 use crate::compile::generator::*;
@@ -16,7 +16,11 @@ impl Generator {
         let path = Path::new("lib/stdio.bc").to_owned();
         let buf = MemoryBuffer::create_from_file(&path).map_err(|e| e.to_string())?;
         Module::parse_bitcode_from_buffer(&buf)
-            .map(|m| self.get_module().link_in_module(m).map_err(|e| e.to_string()))
+            .map(|m| {
+                self.get_module()
+                    .link_in_module(m)
+                    .map_err(|e| e.to_string())
+            })
             .map_err(|e| e.to_string())?;
 
         // llvm func
@@ -44,13 +48,13 @@ impl Generator {
             .insert(symbol.to_uppercase(), value);
     }
 
-    pub(crate) fn func_regit(&self, symbol: String, value: FunctionValue)  {
+    pub(crate) fn func_regit(&self, symbol: String, value: FunctionValue) {
         self.func_dic
             .borrow_mut()
             .insert(symbol.to_uppercase(), value);
     }
 
-    pub(crate) fn symbol_entry(&self)  {
+    pub(crate) fn symbol_entry(&self) {
         // nil -> NIL
         let nil_val = self
             .context
@@ -90,7 +94,8 @@ impl Generator {
             .borrow()
             .get(&"stacksave".to_ascii_uppercase())
             .expect("stack save");
-        self.builder.build_call(func, &[], "")
+        self.builder
+            .build_call(func, &[], "")
             .try_as_basic_value()
             .left()
             .map(|a| self.stack_pointer.borrow_mut().push(a))
@@ -110,19 +115,17 @@ impl Generator {
 
     pub fn call_print(&self, val: BasicValueEnum) {
         let format_str = match val.get_type() {
-            FloatType => self.get_module().get_global("floatFormat"),
+            BasicTypeEnum::FloatType(_) => self.get_module().get_global("floatFormat"),
             _ => unimplemented!(),
-        }.unwrap();
+        }
+        .unwrap();
 
         let print_func = self.get_module().get_function("print").unwrap();
-        self.builder.build_call(print_func, &[format_str.as_basic_value_enum(), val], "");
+        self.builder
+            .build_call(print_func, &[format_str.as_basic_value_enum(), val], "");
     }
 
-    pub(crate) fn fold_op(
-        &self,
-        op: OP,
-        arg: &[SExp],
-    ) -> Result<BasicValueEnum, &'static str> {
+    pub(crate) fn fold_op(&self, op: OP, arg: &[SExp]) -> Result<BasicValueEnum, &'static str> {
         let append = |e: FloatValue, v: FloatValue| -> FloatValue {
             match op {
                 OP::Add => e.const_add(v),

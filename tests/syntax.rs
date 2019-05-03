@@ -1,9 +1,6 @@
 #![feature(test)]
 extern crate rlisp;
 
-use std::boxed::Box;
-// use test::test::Bencher;
-
 #[cfg(test)]
 mod tests {
     use rlisp::syntax::ast::*;

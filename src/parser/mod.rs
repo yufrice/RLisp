@@ -1,6 +1,6 @@
 use combine::error::ParseError;
 use combine::parser::char::spaces;
-use combine::{attempt, choice, many1, optional, satisfy, sep_by1, skip_many, token};
+use combine::{attempt, choice, many1, satisfy, sep_by1, skip_many, token};
 use combine::{Parser, Stream};
 use std::boxed::Box;
 

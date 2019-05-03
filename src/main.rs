@@ -26,7 +26,7 @@ fn main() {
 }
 
 fn repl() {
-    let mut engine = rlisp::engine::Engine::new().expect("muri");
+    let mut engine = rlisp::engine::Engine::new();
     loop {
         print!("> ");
         io::stdout().flush().ok();
@@ -45,11 +45,5 @@ fn repl() {
             }
             Err(err) => println!("{}", err),
         }
-    }
-}
-
-fn printer(put: Vec<rlisp::syntax::ast::SExp>) {
-    for p in put {
-        println!("{}", p);
     }
 }

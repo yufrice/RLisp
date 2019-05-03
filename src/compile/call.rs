@@ -12,11 +12,7 @@ impl Generator {
         }?
     }
 
-    fn find_function(
-        &self,
-        symbol: String,
-        arg: &[SExp],
-    ) -> Result<BasicValueEnum, &'static str> {
+    fn find_function(&self, symbol: String, arg: &[SExp]) -> Result<BasicValueEnum, &'static str> {
         match &symbol[..] {
             "+" => self.fold_op(OP::Add, arg),
             "-" => self.fold_op(OP::Sub, arg),
