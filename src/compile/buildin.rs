@@ -16,7 +16,7 @@ impl Generator {
         let path = Path::new("lib/stdio.bc").to_owned();
         let buf = MemoryBuffer::create_from_file(&path).map_err(|e| e.to_string())?;
         Module::parse_bitcode_from_buffer(&buf)
-            .map(|m| self.module.link_in_module(m).map_err(|e| e.to_string()))
+            .map(|m| self.get_module().link_in_module(m).map_err(|e| e.to_string()))
             .map_err(|e| e.to_string())?;
 
         // llvm func
@@ -24,15 +24,15 @@ impl Generator {
         let void_type = self.context.void_type();
         let fn_stack_type = i8_type_ptr.fn_type(&[], false);
         let fn_pop_type = void_type.fn_type(&[i8_type_ptr.into()], false);
-        self.module
+        self.get_module()
             .add_function("llvm.stacksave", fn_stack_type, None);
-        self.module
+        self.get_module()
             .add_function("llvm.stackrestore", fn_pop_type, None);
-        self.module
+        self.get_module()
             .get_function("llvm.stacksave")
             .map(|f| self.func_regit("stacksave".to_string(), f))
             .ok_or_else(|| "buildin:24".to_string())?;
-        self.module
+        self.get_module()
             .get_function("llvm.stackrestore")
             .map(|f| self.func_regit("stackrestore".to_string(), f))
             .ok_or_else(|| "buildin:24".to_string())
@@ -110,11 +110,11 @@ impl Generator {
 
     pub fn call_print(&self, val: BasicValueEnum) {
         let format_str = match val.get_type() {
-            FloatType => self.module.get_global("floatFormat"),
+            FloatType => self.get_module().get_global("floatFormat"),
             _ => unimplemented!(),
         }.unwrap();
 
-        let print_func = self.module.get_function("print").unwrap();
+        let print_func = self.get_module().get_function("print").unwrap();
         self.builder.build_call(print_func, &[format_str.as_basic_value_enum(), val], "");
     }
 

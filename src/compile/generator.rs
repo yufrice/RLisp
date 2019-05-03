@@ -30,6 +30,7 @@ pub(crate) enum ScopeType {
 pub struct Generator {
     pub(crate) context: Context,
     pub(crate) module: Module,
+    pub(crate) jit_module: Option<Module>,
     pub(crate) builder: Builder,
     pub(crate) stack_pointer: RefCell<Vec<BasicValueEnum>>,
     pub(crate) func_dic: RefCell<HashMap<String, FunctionValue>>,
@@ -47,12 +48,17 @@ impl Generator {
         let context = Context::create();
         Generator {
             module: context.create_module("RLISP"),
+            jit_module: None,
             builder: context.create_builder(),
             context,
             stack_pointer: RefCell::new(Vec::new()),
             func_dic: RefCell::new(HashMap::new()),
             env_dic: RefCell::new(HashMap::new()),
         }
+    }
+
+    pub fn jit_env(&mut self, module: Module) {
+        self.jit_module = Some(module);
     }
 
     pub fn init(&mut self) {
@@ -70,11 +76,14 @@ impl Generator {
     }
 
     pub fn get_module(&self) -> &Module {
-        &self.module
+        match self.jit_module {
+            Some(ref module) => module,
+            None => &self.module,
+        }
     }
 
     fn create_function(&mut self, name: &str, ty: FunctionType) -> FunctionValue {
-        let func = self.module.add_function(name, ty, None);
+        let func = self.get_module().add_function(name, ty, None);
         self.func_dic.borrow_mut().insert(name.to_string(), func);
         func
     }
@@ -84,11 +93,22 @@ impl Generator {
     }
 
     pub fn create_engine(&self) -> Result<ExecutionEngine, LLVMString> {
-        self.module
+        self.get_module()
             .create_jit_execution_engine(OptimizationLevel::None)
     }
 
-    pub(crate) fn expr(&self, ast: &SExp) -> Result<BasicValueEnum, &'static str> {
+    pub fn jit_eval(&self, ast: &SExp) -> Result<FunctionValue, &'static str> {
+        let func_type = FloatType::f64_type().fn_type(&[], false);
+        let func = self.get_module().add_function("lambda", func_type, None);
+        let bb = self.context.append_basic_block(&func, "entry");
+
+        let expr = self.expr(ast)?;
+        self.builder.position_at_end(&bb);
+        self.builder.build_return(Some(&expr));
+        Ok(func)
+    }
+
+    pub fn expr(&self, ast: &SExp) -> Result<BasicValueEnum, &'static str> {
         match ast {
             SExp::Atom(v) => self.atom(v),
             SExp::List(v) => match v.as_slice() {

@@ -36,7 +36,7 @@ impl Generator {
 
     pub(crate) fn add_global_variable(&self, symbol: String, val: BasicValueEnum) {
         let ptr_type = val.get_type();
-        let ptr =  self.module.add_global(ptr_type, Some(AddressSpace::Global), &symbol.to_ascii_uppercase());
+        let ptr =  self.get_module().add_global(ptr_type, Some(AddressSpace::Global), &symbol.to_ascii_uppercase());
         ptr.set_initializer(val.as_float_value())
     }
 
@@ -47,7 +47,7 @@ impl Generator {
 
     pub(crate) fn symbol(&self, sym: String) -> Result<BasicValueEnum, &'static str> {
         let symbol = sym.to_ascii_uppercase();
-        match self.module.get_global(&symbol) {
+        match self.get_module().get_global(&symbol) {
             Some(val) => Ok(self.builder.build_load(val.as_pointer_value(), "")),
             None =>
             match self.env_dic.borrow().get(&symbol) {

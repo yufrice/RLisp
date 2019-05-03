@@ -26,7 +26,7 @@ fn main() {
 }
 
 fn repl() {
-    let engine = rlisp::engine::Engine::new().expect("muri");
+    let mut engine = rlisp::engine::Engine::new().expect("muri");
     loop {
         print!("> ");
         io::stdout().flush().ok();
