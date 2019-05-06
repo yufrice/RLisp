@@ -1,4 +1,4 @@
-use inkwell::values::{BasicValueEnum, FloatValue};
+use inkwell::values::{BasicValueEnum, FloatValue, PointerValue};
 use inkwell::AddressSpace;
 use inkwell::module::Linkage;
 
@@ -13,22 +13,24 @@ impl Generator {
         }
     }
 
-    pub(crate) fn alloca_and_store(&self, val: &BasicValueEnum, symbol: String, scope: ScopeType) {
+    pub(crate) fn alloca_and_store(&self, val: &BasicValueEnum, symbol: String, scope: ScopeType)
+        -> PointerValue {
         match scope {
             ScopeType::Local => {
                 let typ = val.get_type();
                 let ptr = self.builder.build_alloca(typ, &symbol[..]);
-                self.symbol_regit(symbol, *val);
                 self.builder.build_store(ptr, *val);
+                ptr
             }
             ScopeType::Closure => unimplemented!(),
             ScopeType::Global => {
-                self.add_global_variable(symbol, *val);
+                self.add_global_variable(symbol, *val)
             }
-        };
+        }
     }
 
-    pub(crate) fn add_global_variable(&self, symbol: String, val: BasicValueEnum) {
+    pub(crate) fn add_global_variable(&self, symbol: String, val: BasicValueEnum)
+        -> PointerValue {
         let ptr_type = val.get_type();
         let ptr = self.module.add_global(
             ptr_type,
@@ -36,7 +38,8 @@ impl Generator {
             &symbol.to_ascii_uppercase(),
         );
         ptr.set_linkage(Linkage::External);
-        ptr.set_initializer(val.as_float_value())
+        ptr.set_initializer(val.as_float_value());
+        ptr.as_pointer_value()
     }
 
     pub(crate) fn floating(&self, value: f64) -> BasicValueEnum {

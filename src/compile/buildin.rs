@@ -162,7 +162,10 @@ impl Generator {
     ) -> Result<BasicValueEnum, &'static str> {
         let mut itr = value.iter();
         let symbol = itr.next().ok_or("").map(|s| s.is_call().ok_or(""))?;
-        let rhs = itr.next().map(|v| self.expr(v)).ok_or("damene")?;
+        let rhs = match itr.next() {
+            Some(SExp::Atom(v)) =>  self.atom(v),
+            _ => Err(""),
+        };
         self.alloca_and_store(&rhs?, symbol?, scope);
         itr.next().map_or(Ok(rhs?), |_| Err(""))
     }

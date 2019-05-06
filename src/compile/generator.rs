@@ -103,15 +103,17 @@ impl Generator {
         let func = self.get_module().add_function("lambda", func_type, None);
         let entry = self.context.append_basic_block(&func, "entry");
 
-        let expr = self.expr(ast)?;
         self.builder.position_at_end(&entry);
+        let expr = self.expr(ast)?;
         self.builder.build_return(Some(&expr));
         Ok(func)
     }
 
     pub fn expr(&self, ast: &SExp) -> Result<BasicValueEnum, &'static str> {
         match ast {
-            SExp::Atom(v) => self.atom(v),
+            SExp::Atom(v) => {
+                self.atom(v)
+            },
             SExp::List(v) => match v.as_slice() {
                 [_] => unimplemented!(),
                 [SExp::Atom(_), ..] => self.call(v),
