@@ -111,9 +111,7 @@ impl Generator {
 
     pub fn expr(&self, ast: &SExp) -> Result<BasicValueEnum, &'static str> {
         match ast {
-            SExp::Atom(v) => {
-                self.atom(v)
-            },
+            SExp::Atom(v) => self.atom(v),
             SExp::List(v) => match v.as_slice() {
                 [_] => unimplemented!(),
                 [SExp::Atom(_), ..] => self.call(v),

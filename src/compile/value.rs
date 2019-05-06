@@ -1,6 +1,6 @@
+use inkwell::module::Linkage;
 use inkwell::values::{BasicValueEnum, FloatValue, PointerValue};
 use inkwell::AddressSpace;
-use inkwell::module::Linkage;
 
 use crate::compile::generator::*;
 use crate::syntax::ast::DataType;
@@ -13,8 +13,12 @@ impl Generator {
         }
     }
 
-    pub(crate) fn alloca_and_store(&self, val: &BasicValueEnum, symbol: String, scope: ScopeType)
-        -> PointerValue {
+    pub(crate) fn alloca_and_store(
+        &self,
+        val: &BasicValueEnum,
+        symbol: String,
+        scope: ScopeType,
+    ) -> PointerValue {
         match scope {
             ScopeType::Local => {
                 let typ = val.get_type();
@@ -23,14 +27,11 @@ impl Generator {
                 ptr
             }
             ScopeType::Closure => unimplemented!(),
-            ScopeType::Global => {
-                self.add_global_variable(symbol, *val)
-            }
+            ScopeType::Global => self.add_global_variable(symbol, *val),
         }
     }
 
-    pub(crate) fn add_global_variable(&self, symbol: String, val: BasicValueEnum)
-        -> PointerValue {
+    pub(crate) fn add_global_variable(&self, symbol: String, val: BasicValueEnum) -> PointerValue {
         let ptr_type = val.get_type();
         let ptr = self.module.add_global(
             ptr_type,

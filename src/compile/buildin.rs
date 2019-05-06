@@ -163,7 +163,7 @@ impl Generator {
         let mut itr = value.iter();
         let symbol = itr.next().ok_or("").map(|s| s.is_call().ok_or(""))?;
         let rhs = match itr.next() {
-            Some(SExp::Atom(v)) =>  self.atom(v),
+            Some(SExp::Atom(v)) => self.atom(v),
             _ => Err(""),
         };
         self.alloca_and_store(&rhs?, symbol?, scope);
