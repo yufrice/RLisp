@@ -25,7 +25,7 @@ impl Engine {
                     .or(Err("Failed create engine"))?;
                 engine
                     .add_module(&self.generator.module)
-                    .or(Err("Failed add module"));
+                    .or(Err("Failed add module"))?;
 
                 self.generator.jit_env(Some(module));
                 self.generator.jit_eval(&ast)?;
@@ -41,7 +41,7 @@ impl Engine {
                 self.generator.jit_env(None);
                 engine
                     .remove_module(&self.generator.module)
-                    .or(Err("Failed remove module"));
+                    .or(Err("Failed remove module"))?;
                 Ok(())
             }
         }
